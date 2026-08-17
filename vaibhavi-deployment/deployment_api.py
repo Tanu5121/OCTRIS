@@ -9,10 +9,33 @@ engine = PoliceDeploymentEngine()
 engine.register_location("loc_001", "Sitabuldi", 21.1458, 79.0882)
 engine.register_location("loc_002", "Nagpur Airport", 21.0922, 79.0471)
 
-engine.register_police_unit("P-01", "P-01", status="DEPLOYED", lat=21.1440, lon=79.0870)
-engine.register_police_unit("P-02", "P-02", status="BUSY", lat=21.1460, lon=79.0900)
-engine.register_police_unit("P-03", "P-03", status="AVAILABLE", lat=21.1430, lon=79.0860)
-engine.register_police_unit("P-04", "P-04", status="OFFLINE", lat=21.1420, lon=79.0890)
+engine.register_police_unit(
+    "P-01", "P-01",
+    status="DEPLOYED",
+    lat=21.145,
+    lon=79.090
+)
+
+engine.register_police_unit(
+    "P-02", "P-02",
+    status="BUSY",
+    lat=21.135,
+    lon=79.080
+)
+
+engine.register_police_unit(
+    "P-03", "P-03",
+    status="AVAILABLE",
+    lat=21.125,
+    lon=79.100
+)
+
+engine.register_police_unit(
+    "P-04", "P-04",
+    status="OFFLINE",
+    lat=21.155,
+    lon=79.075
+)
 
 @app.route('/api/police/units', methods=['GET'])
 def get_police_units():
