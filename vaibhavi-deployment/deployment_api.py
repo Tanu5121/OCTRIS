@@ -4,8 +4,11 @@ from flask_cors import CORS
 from deployment_engine import PoliceDeploymentEngine
 
 app = Flask(__name__)
-CORS(app)
+
+CORS(app, origins=["http://localhost:5173"])
+
 socketio = SocketIO(app, cors_allowed_origins="*")
+
 engine = PoliceDeploymentEngine()
 
 engine.register_location("loc_001", "Sitabuldi", 21.1458, 79.0882)
@@ -39,6 +42,7 @@ engine.register_police_unit(
     lon=79.075
 )
 
+
 @app.route('/api/police/units', methods=['GET'])
 def get_police_units():
     return jsonify({
@@ -46,26 +50,51 @@ def get_police_units():
         "units": list(engine.police_units.values())
     })
 
+
 @app.route('/api/deployment/recommend/<location_id>', methods=['GET'])
 def get_recommendation(location_id):
     result = engine.generate_recommendation(location_id)
     return jsonify(result)
 
+
 @app.route('/api/deployment/accept', methods=['POST'])
 def accept_deployment():
     data = request.json or {}
-    res = engine.accept_recommendation(data.get("recommendation_id"))
+
+    res = engine.accept_recommendation(
+        data.get("recommendation_id")
+    )
+
     if res.get("success"):
-        socketio.emit("POLICE_UNIT_UPDATED", res["unit"])
+        socketio.emit(
+            "POLICE_UNIT_UPDATED",
+            res["unit"]
+        )
+
     return jsonify(res)
+
 
 @app.route('/api/deployment/redeploy', methods=['POST'])
 def execute_redeployment():
     data = request.json or {}
-    res = engine.execute_redeployment(data.get("redeployment_id"))
+
+    res = engine.execute_redeployment(
+        data.get("redeployment_id")
+    )
+
     if res.get("success"):
-        socketio.emit("DEPLOYMENT_UPDATED", res["unit"])
+        socketio.emit(
+            "DEPLOYMENT_UPDATED",
+            res["unit"]
+        )
+
     return jsonify(res)
 
+
 if __name__ == '__main__':
-    socketio.run(app, port=5002, debug=True)
+    socketio.run(
+        app,
+        port=5002,
+        debug=True
+    )
+    

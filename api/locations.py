@@ -35,9 +35,7 @@ LOCATIONS = [
 @router.get("/")
 def get_locations():
 
-    return {
-        "locations": LOCATIONS
-    }
+    return LOCATIONS 
 
 
 def get_location_by_id(location_id: int):
