@@ -5,10 +5,12 @@ from fastapi import (
 )
 
 from .database import db
+
 from .schemas import (
     RiskRecommendationEvent,
     DecisionRequest,
 )
+
 from .services import (
     create_notification,
     mark_read,
@@ -21,52 +23,45 @@ router = APIRouter(
     tags=["MSG Operator"],
 )
 
-@router.post(
-    "/notifications/{notification_id}/decision"
-)
-def notification_decision(
-    notification_id: int,
-    request: DecisionRequest,
+
+# ==================================================
+# RECEIVE RISK EVENT
+# ==================================================
+
+@router.post("/events/risk")
+def receive_risk_event(
+    event: RiskRecommendationEvent,
 ):
     """
-    Record ACCEPT, MODIFY, or REJECT.
+    Receive a risk/recommendation event.
+
+    MSG Operator converts the received event
+    into a notification.
     """
 
-    try:
+    notification_id, duplicate = create_notification(
+        event
+    )
 
-        result = record_decision(
-            notification_id,
-            request,
-        )
-
-    except ValueError as error:
-
-        raise HTTPException(
-            status_code=400,
-            detail=str(error),
-        )
-
-
-    if result is None:
-
-        raise HTTPException(
-            status_code=404,
-            detail="Notification not found.",
-        )
-
+    if duplicate:
+        return {
+            "success": True,
+            "duplicate": True,
+            "notification_id": None,
+            "message": "Risk event already processed.",
+        }
 
     return {
-
         "success": True,
-
-        "message": (
-            f"{request.action} decision recorded."
-        ),
-
-        "decision": result,
-
+        "duplicate": False,
+        "notification_id": notification_id,
+        "message": "Notification created.",
     }
 
+
+# ==================================================
+# GET NOTIFICATIONS
+# ==================================================
 
 @router.get("/notifications")
 def get_notifications(
@@ -101,12 +96,22 @@ def get_notifications(
             (limit,),
         ).fetchall()
 
-    return [dict(row) for row in rows]
+    return [
+        dict(row)
+        for row in rows
+    ]
 
+
+# ==================================================
+# GET ACTIVE NOTIFICATIONS
+# ==================================================
 
 @router.get("/notifications/active")
 def get_active_notifications():
-    """Return notifications that require operator action."""
+    """
+    Return notifications that require
+    operator action.
+    """
 
     with db() as connection:
 
@@ -124,10 +129,19 @@ def get_active_notifications():
             """
         ).fetchall()
 
-    return [dict(row) for row in rows]
+    return [
+        dict(row)
+        for row in rows
+    ]
 
 
-@router.get("/notifications/{notification_id}")
+# ==================================================
+# GET ONE NOTIFICATION
+# ==================================================
+
+@router.get(
+    "/notifications/{notification_id}"
+)
 def get_notification(
     notification_id: int,
 ):
@@ -145,6 +159,7 @@ def get_notification(
         ).fetchone()
 
     if row is None:
+
         raise HTTPException(
             status_code=404,
             detail="Notification not found.",
@@ -152,6 +167,10 @@ def get_notification(
 
     return dict(row)
 
+
+# ==================================================
+# MARK NOTIFICATION AS READ
+# ==================================================
 
 @router.patch(
     "/notifications/{notification_id}/read"
@@ -161,9 +180,12 @@ def read_notification(
 ):
     """Mark a notification as read."""
 
-    updated = mark_read(notification_id)
+    updated = mark_read(
+        notification_id
+    )
 
     if not updated:
+
         raise HTTPException(
             status_code=404,
             detail="Notification not found.",
@@ -174,6 +196,10 @@ def read_notification(
         "message": "Notification marked as read.",
     }
 
+
+# ==================================================
+# ACCEPT / MODIFY / REJECT
+# ==================================================
 
 @router.post(
     "/notifications/{notification_id}/decision"
@@ -186,12 +212,22 @@ def notification_decision(
     Record ACCEPT, MODIFY, or REJECT.
     """
 
-    result = record_decision(
-        notification_id,
-        request,
-    )
+    try:
+
+        result = record_decision(
+            notification_id,
+            request,
+        )
+
+    except ValueError as error:
+
+        raise HTTPException(
+            status_code=400,
+            detail=str(error),
+        )
 
     if result is None:
+
         raise HTTPException(
             status_code=404,
             detail="Notification not found.",
@@ -199,12 +235,18 @@ def notification_decision(
 
     return {
         "success": True,
+
         "message": (
             f"{request.action} decision recorded."
         ),
+
         "decision": result,
     }
 
+
+# ==================================================
+# STATISTICS
+# ==================================================
 
 @router.get("/statistics")
 def notification_statistics():
