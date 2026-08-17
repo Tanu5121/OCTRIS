@@ -1,0 +1,32 @@
+export const locations = [
+  {
+    id: "loc_001",
+    name: "Sitabuldi",
+    latitude: 21.1458,
+    longitude: 79.0882,
+    risk_score: 85,
+    risk_level: "RED",
+    congestion_level: "SEVERE",
+    police_coverage: "UNMANNED",
+  },
+  {
+    id: "loc_002",
+    name: "Wardha Road",
+    latitude: 21.1147,
+    longitude: 79.0849,
+    risk_score: 68,
+    risk_level: "YELLOW",
+    congestion_level: "MODERATE",
+    police_coverage: "MANNED",
+  },
+  {
+    id: "loc_003",
+    name: "Hingna T-Point",
+    latitude: 21.1077,
+    longitude: 78.9991,
+    risk_score: 42,
+    risk_level: "GREEN",
+    congestion_level: "LOW",
+    police_coverage: "MANNED",
+  },
+]

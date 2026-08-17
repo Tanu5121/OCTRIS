@@ -1,0 +1,26 @@
+export const alerts = [
+  {
+    id: "ALERT-001",
+    severity: "HIGH",
+    location_id: "loc_001",
+    location_name: "Sitabuldi",
+    risk_score: 85,
+    duration: "18 min",
+    police_coverage: "UNMANNED",
+    reason: "Severe congestion has persisted in the high-risk zone.",
+    recommendation_available: true,
+    status: "ACTIVE",
+  },
+  {
+    id: "ALERT-002",
+    severity: "MEDIUM",
+    location_id: "LOC-002",
+    location_name: "Wardha Road",
+    risk_score: 68,
+    duration: "9 min",
+    police_coverage: "MANNED",
+    reason: "Traffic congestion is increasing.",
+    recommendation_available: false,
+    status: "ACTIVE",
+  },
+]
