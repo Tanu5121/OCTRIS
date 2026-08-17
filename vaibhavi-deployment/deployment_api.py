@@ -6,13 +6,20 @@ app = Flask(__name__)
 socketio = SocketIO(app, cors_allowed_origins="*")
 engine = PoliceDeploymentEngine()
 
-engine.register_location("loc_001", "MG Road Junction", 19.076, 72.8777)
-engine.register_location("loc_002", "Airport Junction", 19.090, 72.8600)
+engine.register_location("loc_001", "Sitabuldi", 21.1458, 79.0882)
+engine.register_location("loc_002", "Nagpur Airport", 21.0922, 79.0471)
 
-engine.register_police_unit("P-01", "P-01", status="DEPLOYED", lat=19.070, lon=72.870)
-engine.register_police_unit("P-02", "P-02", status="BUSY", lat=19.071, lon=72.871)
-engine.register_police_unit("P-03", "P-03", status="AVAILABLE", lat=19.072, lon=72.872)
-engine.register_police_unit("P-04", "P-04", status="OFFLINE", lat=19.073, lon=72.873)
+engine.register_police_unit("P-01", "P-01", status="DEPLOYED", lat=21.1440, lon=79.0870)
+engine.register_police_unit("P-02", "P-02", status="BUSY", lat=21.1460, lon=79.0900)
+engine.register_police_unit("P-03", "P-03", status="AVAILABLE", lat=21.1430, lon=79.0860)
+engine.register_police_unit("P-04", "P-04", status="OFFLINE", lat=21.1420, lon=79.0890)
+
+@app.route('/api/police/units', methods=['GET'])
+def get_police_units():
+    return jsonify({
+        "success": True,
+        "units": list(engine.police_units.values())
+    })
 
 @app.route('/api/deployment/recommend/<location_id>', methods=['GET'])
 def get_recommendation(location_id):
