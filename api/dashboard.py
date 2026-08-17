@@ -4,135 +4,104 @@ from sqlalchemy.orm import Session
 from database import get_db
 from models import TrafficImage
 
-
 router = APIRouter(
     prefix="/dashboard",
     tags=["Dashboard"]
 )
 
 
+# ==========================================
+# DASHBOARD SUMMARY
+# ==========================================
+
 @router.get("/summary")
 def dashboard_summary(
     db: Session = Depends(get_db)
 ):
 
-    # -------------------------
-    # TOTAL IMAGES
-    # -------------------------
-
-    total_images = (
-        db.query(TrafficImage).count()
-    )
-
-
-    # -------------------------
-    # LATEST 5
-    # -------------------------
+    total_images = db.query(TrafficImage).count()
 
     latest_images = (
-
         db.query(TrafficImage)
-
-        .order_by(
-            TrafficImage.id.desc()
-        )
-
+        .order_by(TrafficImage.id.desc())
         .limit(5)
-
         .all()
-
     )
 
-
     images = []
-
 
     for image in latest_images:
 
         images.append({
+            "id": image.id,
+            "filename": image.filename,
+            "status": image.status,
+            "location_id": image.location_id,
+            "location_name": image.location_name,
+            "latitude": image.latitude,
+            "longitude": image.longitude,
+            "total_vehicles": image.total_vehicles,
+            "congestion_level": image.congestion_level,
+            "risk_score": image.risk_score,
+            "risk_level": image.risk_level
+        })
 
-            "id":
-                image.id,
+    return {
+        "total_images": total_images,
+        "latest_images": images
+    }
 
-            "filename":
-                image.filename,
 
-            "status":
-                image.status,
+# ==========================================
+# MAP DATA
+# ==========================================
 
-            "uploaded_at":
-                image.uploaded_at,
+@router.get("/map-data")
+def get_map_data(
+    db: Session = Depends(get_db)
+):
 
-            "location": {
+    records = (
+        db.query(TrafficImage)
+        .filter(
+            TrafficImage.latitude.isnot(None),
+            TrafficImage.longitude.isnot(None),
+            TrafficImage.risk_score.isnot(None)
+        )
+        .order_by(TrafficImage.id.desc())
+        .all()
+    )
 
-                "id":
-                    image.location_id,
+    locations = []
 
-                "name":
-                    image.location_name,
+    for image in records:
 
-                "latitude":
-                    image.latitude,
+        locations.append({
 
-                "longitude":
-                    image.longitude
+            "image_id": image.id,
 
-            },
+            "location_id": image.location_id,
 
-            "vehicles": {
+            "location_name": image.location_name,
 
-                "cars":
-                    image.car_count,
+            "latitude": image.latitude,
 
-                "motorcycles":
-                    image.motorcycle_count,
+            "longitude": image.longitude,
 
-                "buses":
-                    image.bus_count,
+            "risk_score": image.risk_score,
 
-                "trucks":
-                    image.truck_count,
+            "risk_level": image.risk_level,
 
-                "bicycles":
-                    image.bicycle_count,
+            "total_vehicles": image.total_vehicles,
 
-                "total":
-                    image.total_vehicles
+            "congestion_level": image.congestion_level,
 
-            },
+            "alert_active": image.alert_active,
 
-            "congestion":
-                image.congestion_level,
-
-            "risk": {
-
-                "score":
-                    image.risk_score,
-
-                "level":
-                    image.risk_level
-
-            },
-
-            "alert": {
-
-                "active":
-                    image.alert_active,
-
-                "type":
-                    image.alert_type
-
-            }
+            "alert_type": image.alert_type
 
         })
 
-
     return {
-
-        "total_images":
-            total_images,
-
-        "latest_images":
-            images
-
+        "locations": locations
     }

@@ -8,12 +8,25 @@ class TrafficImage(Base):
 
     __tablename__ = "traffic_images"
 
-    # IMAGE
-    id = Column(Integer, primary_key=True, index=True)
+    # -------------------------
+    # BASIC
+    # -------------------------
 
-    filename = Column(String, nullable=False)
+    id = Column(
+        Integer,
+        primary_key=True,
+        index=True
+    )
 
-    file_path = Column(String, nullable=False)
+    filename = Column(
+        String,
+        nullable=False
+    )
+
+    file_path = Column(
+        String,
+        nullable=False
+    )
 
     uploaded_at = Column(
         DateTime,
@@ -25,52 +38,93 @@ class TrafficImage(Base):
         default="uploaded"
     )
 
+
+    # -------------------------
     # LOCATION
-    location_id = Column(Integer, nullable=True)
+    # -------------------------
 
-    location_name = Column(String, nullable=True)
-
-    latitude = Column(Float, nullable=True)
-
-    longitude = Column(Float, nullable=True)
-
-    # VEHICLES
-    car_count = Column(Integer, default=0)
-
-    motorcycle_count = Column(Integer, default=0)
-
-    bus_count = Column(Integer, default=0)
-
-    truck_count = Column(Integer, default=0)
-
-    bicycle_count = Column(Integer, default=0)
-
-    total_vehicles = Column(Integer, default=0)
-
-    # TRAFFIC
-    congestion_level = Column(
-        String,
-        nullable=True
+    location_id = Column(
+        Integer
     )
 
-    # RISK
-    risk_score = Column(
+    location_name = Column(
+        String
+    )
+
+    latitude = Column(
+        Float
+    )
+
+    longitude = Column(
+        Float
+    )
+
+
+    # -------------------------
+    # VEHICLES
+    # -------------------------
+
+    car_count = Column(
         Integer,
-        nullable=True
+        default=0
+    )
+
+    motorcycle_count = Column(
+        Integer,
+        default=0
+    )
+
+    bus_count = Column(
+        Integer,
+        default=0
+    )
+
+    truck_count = Column(
+        Integer,
+        default=0
+    )
+
+    bicycle_count = Column(
+        Integer,
+        default=0
+    )
+
+    total_vehicles = Column(
+        Integer,
+        default=0
+    )
+
+
+    # -------------------------
+    # TRAFFIC
+    # -------------------------
+
+    congestion_level = Column(
+        String
+    )
+
+
+    # -------------------------
+    # RISK
+    # -------------------------
+
+    risk_score = Column(
+        Integer
     )
 
     risk_level = Column(
-        String,
-        nullable=True
+        String
     )
 
+
+    # -------------------------
     # ALERT
+    # -------------------------
+
     alert_active = Column(
-        String,
-        nullable=True
+        String
     )
 
     alert_type = Column(
-        String,
-        nullable=True
+        String
     )

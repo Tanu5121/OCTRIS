@@ -1,5 +1,4 @@
-from fastapi import APIRouter, HTTPException
-
+from fastapi import APIRouter
 
 router = APIRouter(
     prefix="/locations",
@@ -21,12 +20,18 @@ LOCATIONS = [
         "name": "University Road",
         "latitude": 21.1490,
         "longitude": 79.0800
+    },
+
+    {
+        "id": 3,
+        "name": "Sitabardi",
+        "latitude": 21.1458,
+        "longitude": 79.0882
     }
 
 ]
 
 
-# GET ALL LOCATIONS
 @router.get("/")
 def get_locations():
 
@@ -35,25 +40,6 @@ def get_locations():
     }
 
 
-# GET LOCATION BY ID
-@router.get("/{location_id}")
-def get_location(location_id: int):
-
-    location = get_location_by_id(
-        location_id
-    )
-
-    if location is None:
-
-        raise HTTPException(
-            status_code=404,
-            detail="Location not found"
-        )
-
-    return location
-
-
-# INTERNAL FUNCTION
 def get_location_by_id(location_id: int):
 
     for location in LOCATIONS:
