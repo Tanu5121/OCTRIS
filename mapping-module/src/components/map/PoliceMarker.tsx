@@ -53,7 +53,7 @@ function PoliceMarker({
   <Marker
     position={position}
     icon={policeIcon}
-    zIndexOffset={500}
+    zIndexOffset={2000}
     riseOnHover={true}
   >
     <Popup>

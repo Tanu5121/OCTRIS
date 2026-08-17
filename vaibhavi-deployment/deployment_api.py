@@ -1,8 +1,10 @@
 from flask import Flask, jsonify, request
 from flask_socketio import SocketIO
+from flask_cors import CORS
 from deployment_engine import PoliceDeploymentEngine
 
 app = Flask(__name__)
+CORS(app)
 socketio = SocketIO(app, cors_allowed_origins="*")
 engine = PoliceDeploymentEngine()
 
