@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+.venv/
+venv/
+env/
+.env
+uploaded_images/
+*.pt
+runs/
+.vscode/
