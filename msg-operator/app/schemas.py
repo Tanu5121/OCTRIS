@@ -15,6 +15,16 @@ DecisionAction = Literal[
     "MODIFY",
     "REJECT",
 ]
+class DecisionRequest(BaseModel):
+    action: DecisionAction
+
+    modified_reason: Optional[str] = None
+
+    modified_police_status: Optional[str] = None
+
+    modified_unit_id: Optional[str] = None
+
+    operator_comment: Optional[str] = None
 
 
 class RiskRecommendationEvent(BaseModel):

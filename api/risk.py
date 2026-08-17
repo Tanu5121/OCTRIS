@@ -8,10 +8,6 @@ router = APIRouter(
 )
 
 
-# -----------------------------------
-# TRAFFIC DATA
-# -----------------------------------
-
 class TrafficData(BaseModel):
 
     vehicle_count: int
@@ -21,41 +17,35 @@ class TrafficData(BaseModel):
     accident_detected: bool = False
 
 
-# -----------------------------------
-# RISK CALCULATION
-# -----------------------------------
-
 @router.post("/analyze")
 def analyze_risk(data: TrafficData):
 
     score = 0
 
-    # --------------------------------
+    # -------------------------
     # VEHICLE DENSITY
-    # --------------------------------
+    # -------------------------
 
-    if data.vehicle_count >= 60:
+    if data.vehicle_count >= 40:
 
         score += 40
 
-    elif data.vehicle_count >= 40:
-
-        score += 30
-
     elif data.vehicle_count >= 20:
 
-        score += 20
+        score += 25
 
     else:
 
         score += 10
 
 
-    # --------------------------------
+    # -------------------------
     # CONGESTION
-    # --------------------------------
+    # -------------------------
 
-    congestion = data.congestion_level.lower()
+    congestion = (
+        data.congestion_level.lower()
+    )
 
     if congestion == "high":
 
@@ -70,25 +60,25 @@ def analyze_risk(data: TrafficData):
         score += 10
 
 
-    # --------------------------------
+    # -------------------------
     # ACCIDENT
-    # --------------------------------
+    # -------------------------
 
     if data.accident_detected:
 
         score += 20
 
 
-    # --------------------------------
-    # LIMIT SCORE TO 100
-    # --------------------------------
+    # -------------------------
+    # MAXIMUM 100
+    # -------------------------
 
     score = min(score, 100)
 
 
-    # --------------------------------
+    # -------------------------
     # RISK LEVEL
-    # --------------------------------
+    # -------------------------
 
     if score >= 70:
 
@@ -102,10 +92,6 @@ def analyze_risk(data: TrafficData):
 
         risk_level = "LOW"
 
-
-    # --------------------------------
-    # RESPONSE
-    # --------------------------------
 
     return {
 

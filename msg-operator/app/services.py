@@ -275,12 +275,16 @@ def record_decision(
     request: DecisionRequest,
 ):
     """
-    Record the operator's Accept/Modify/Reject decision.
+    Record the operator's ACCEPT, MODIFY, or REJECT decision.
     """
 
     now = utc_now()
 
     with db() as connection:
+
+        # ==================================================
+        # FIND NOTIFICATION
+        # ==================================================
 
         notification = connection.execute(
             """
@@ -294,7 +298,28 @@ def record_decision(
         if notification is None:
             return None
 
-        # Store operator decision in history.
+
+        # ==================================================
+        # VALIDATE MODIFY REQUEST
+        # ==================================================
+
+        if request.action == "MODIFY":
+
+            if not request.modified_reason:
+                raise ValueError(
+                    "modified_reason is required for MODIFY."
+                )
+
+            if not request.modified_unit_id:
+                raise ValueError(
+                    "modified_unit_id is required for MODIFY."
+                )
+
+
+        # ==================================================
+        # STORE OPERATOR DECISION
+        # ==================================================
+
         connection.execute(
             """
             INSERT INTO decisions
@@ -311,41 +336,69 @@ def record_decision(
             """,
             (
                 notification_id,
+
                 request.action,
+
                 request.modified_reason,
+
                 request.modified_police_status,
+
                 request.modified_unit_id,
+
                 request.operator_comment,
+
                 now,
             ),
         )
 
-        # Update notification status.
+
+        # ==================================================
+        # UPDATE NOTIFICATION
+        # ==================================================
+
         connection.execute(
             """
             UPDATE notifications
-            SET status = ?,
+            SET
+                status = ?,
                 action_required = 0,
                 updated_at = ?
             WHERE id = ?
             """,
             (
                 request.action,
+
                 now,
+
                 notification_id,
             ),
         )
 
+
+        # ==================================================
+        # RETURN DECISION
+        # ==================================================
+
         return {
-            "notification_id": notification_id,
-            "action": request.action,
-            "operator_comment": request.operator_comment,
-            "modified_reason": request.modified_reason,
-            "modified_police_status": (
-                request.modified_police_status
-            ),
-            "modified_unit_id": (
-                request.modified_unit_id
-            ),
-            "recorded_at": now,
+
+            "notification_id":
+                notification_id,
+
+            "action":
+                request.action,
+
+            "operator_comment":
+                request.operator_comment,
+
+            "modified_reason":
+                request.modified_reason,
+
+            "modified_police_status":
+                request.modified_police_status,
+
+            "modified_unit_id":
+                request.modified_unit_id,
+
+            "recorded_at":
+                now,
         }
