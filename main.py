@@ -104,15 +104,14 @@ app.add_middleware(
     CORSMiddleware,
 
     allow_origins=[
-        "http://localhost",
-        "http://localhost:3000",
         "http://localhost:5173",
-        "http://localhost:5174",
-
-        "http://127.0.0.1",
-        "http://127.0.0.1:3000",
         "http://127.0.0.1:5173",
+
+        "http://localhost:5174",
         "http://127.0.0.1:5174",
+
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
     ],
 
     allow_credentials=True,
@@ -209,14 +208,23 @@ async def upload_image(
         file.filename
     )
 
-    with open(
-        file_path,
-        "wb"
-    ) as buffer:
+    try:
 
-        shutil.copyfileobj(
-            file.file,
-            buffer
+        with open(
+            file_path,
+            "wb"
+        ) as buffer:
+
+            shutil.copyfileobj(
+                file.file,
+                buffer
+            )
+
+    except Exception as e:
+
+        raise HTTPException(
+            status_code=500,
+            detail=f"Could not save image: {str(e)}"
         )
 
 
@@ -224,9 +232,18 @@ async def upload_image(
     # 3. YOLO DETECTION
     # ==================================================
 
-    yolo_result = detect_traffic(
-        file_path
-    )
+    try:
+
+        yolo_result = detect_traffic(
+            file_path
+        )
+
+    except Exception as e:
+
+        raise HTTPException(
+            status_code=500,
+            detail=f"YOLO detection failed: {str(e)}"
+        )
 
 
     # ==================================================
@@ -269,11 +286,13 @@ async def upload_image(
     # ==================================================
 
     total_vehicles = (
+
         car_count
         + motorcycle_count
         + bus_count
         + truck_count
         + bicycle_count
+
     )
 
 
@@ -305,6 +324,7 @@ async def upload_image(
         congestion_level=congestion_level,
 
         accident_detected=False
+
     )
 
     risk_result = analyze_risk(
@@ -326,6 +346,7 @@ async def upload_image(
 
         location=
             location["name"]
+
     )
 
     alert_result = create_alert(
@@ -345,24 +366,38 @@ async def upload_image(
 
         status="analyzed",
 
+        # ----------------------------------------------
         # LOCATION
-        location_id=location["id"],
+        # ----------------------------------------------
 
-        location_name=location["name"],
+        location_id=
+            location["id"],
 
-        latitude=location["latitude"],
+        location_name=
+            location["name"],
 
-        longitude=location["longitude"],
+        latitude=
+            location["latitude"],
 
+        longitude=
+            location["longitude"],
+
+
+        # ----------------------------------------------
         # VEHICLES
-        car_count=car_count,
+        # ----------------------------------------------
+
+        car_count=
+            car_count,
 
         motorcycle_count=
             motorcycle_count,
 
-        bus_count=bus_count,
+        bus_count=
+            bus_count,
 
-        truck_count=truck_count,
+        truck_count=
+            truck_count,
 
         bicycle_count=
             bicycle_count,
@@ -370,45 +405,78 @@ async def upload_image(
         total_vehicles=
             total_vehicles,
 
+
+        # ----------------------------------------------
         # TRAFFIC
+        # ----------------------------------------------
+
         congestion_level=
             congestion_level,
 
+
+        # ----------------------------------------------
         # RISK
+        # ----------------------------------------------
+
         risk_score=
             risk_result["risk_score"],
 
         risk_level=
             risk_result["risk_level"],
 
+
+        # ----------------------------------------------
         # ALERT
+        # ----------------------------------------------
+
         alert_active=
             str(alert_result["alert"]),
 
         alert_type=
             alert_result["alert_type"]
-    )
 
-
-    db.add(
-        traffic_image
-    )
-
-    db.commit()
-
-    db.refresh(
-        traffic_image
     )
 
 
     # ==================================================
-    # 10. FINAL RESPONSE
+    # 10. DATABASE COMMIT
+    # ==================================================
+
+    try:
+
+        db.add(
+            traffic_image
+        )
+
+        db.commit()
+
+        db.refresh(
+            traffic_image
+        )
+
+    except Exception as e:
+
+        db.rollback()
+
+        raise HTTPException(
+            status_code=500,
+            detail=f"Database error: {str(e)}"
+        )
+
+
+    # ==================================================
+    # 11. FINAL RESPONSE
     # ==================================================
 
     return {
 
         "message":
             "Traffic image uploaded and analyzed successfully!",
+
+
+        # ----------------------------------------------
+        # IMAGE
+        # ----------------------------------------------
 
         "image_id":
             traffic_image.id,
@@ -419,7 +487,11 @@ async def upload_image(
         "status":
             traffic_image.status,
 
-        # LOCATION + COORDINATES
+
+        # ----------------------------------------------
+        # LOCATION
+        # ----------------------------------------------
+
         "location": {
 
             "id":
@@ -433,9 +505,14 @@ async def upload_image(
 
             "longitude":
                 location["longitude"]
+
         },
 
+
+        # ----------------------------------------------
         # YOLO
+        # ----------------------------------------------
+
         "yolo_result": {
 
             "counts":
@@ -449,9 +526,14 @@ async def upload_image(
                     "detections",
                     []
                 )
+
         },
 
+
+        # ----------------------------------------------
         # RISK
+        # ----------------------------------------------
+
         "risk_result": {
 
             "risk_score":
@@ -468,9 +550,15 @@ async def upload_image(
 
             "accident_detected":
                 risk_result["accident_detected"]
+
         },
 
+
+        # ----------------------------------------------
         # ALERT
+        # ----------------------------------------------
+
         "alert_result":
             alert_result
+
     }
