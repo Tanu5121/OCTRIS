@@ -1,18 +1,21 @@
+import os
+
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 
 
-# PostgreSQL database URL
-DATABASE_URL = "postgresql://postgres:aishwarya%403456@localhost:5432/traffic_intelligence"
+DATABASE_URL = os.getenv("DATABASE_URL")
 
 
-# Create database engine
+if not DATABASE_URL:
+    raise ValueError("DATABASE_URL environment variable is not set")
+
+
 engine = create_engine(
     DATABASE_URL
 )
 
 
-# Create database session
 SessionLocal = sessionmaker(
     autocommit=False,
     autoflush=False,
@@ -20,11 +23,9 @@ SessionLocal = sessionmaker(
 )
 
 
-# Base class for database models
 Base = declarative_base()
 
 
-# Database dependency
 def get_db():
 
     db = SessionLocal()
