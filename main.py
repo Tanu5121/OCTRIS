@@ -14,7 +14,10 @@ import os
 import shutil
 
 
+# ==================================================
 # DATABASE
+# ==================================================
+
 from database import (
     engine,
     get_db,
@@ -24,14 +27,20 @@ from database import (
 from models import TrafficImage
 
 
+# ==================================================
 # LOCATION
+# ==================================================
+
 from api.locations import (
     router as locations_router,
     get_location_by_id
 )
 
 
+# ==================================================
 # RISK
+# ==================================================
+
 from api.risk import (
     router as risk_router,
     TrafficData,
@@ -39,7 +48,10 @@ from api.risk import (
 )
 
 
+# ==================================================
 # ALERTS
+# ==================================================
+
 from api.alerts import (
     router as alerts_router,
     AlertRequest,
@@ -47,20 +59,26 @@ from api.alerts import (
 )
 
 
+# ==================================================
 # DASHBOARD
+# ==================================================
+
 from api.dashboard import (
     router as dashboard_router
 )
 
 
+# ==================================================
 # YOLO
+# ==================================================
+
 from ai.yolo_detector import (
     detect_traffic
 )
 
 
 # ==================================================
-# DATABASE
+# CREATE DATABASE TABLES
 # ==================================================
 
 Base.metadata.create_all(
@@ -84,12 +102,23 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
+
     allow_origins=[
+        "http://localhost",
+        "http://localhost:3000",
+        "http://localhost:5173",
         "http://localhost:5174",
+
+        "http://127.0.0.1",
+        "http://127.0.0.1:3000",
+        "http://127.0.0.1:5173",
         "http://127.0.0.1:5174",
     ],
+
     allow_credentials=True,
+
     allow_methods=["*"],
+
     allow_headers=["*"],
 )
 
@@ -192,7 +221,7 @@ async def upload_image(
 
 
     # ==================================================
-    # 3. YOLO
+    # 3. YOLO DETECTION
     # ==================================================
 
     yolo_result = detect_traffic(
@@ -266,12 +295,15 @@ async def upload_image(
 
 
     # ==================================================
-    # 7. RISK
+    # 7. RISK CALCULATION
     # ==================================================
 
     traffic_data = TrafficData(
+
         vehicle_count=total_vehicles,
+
         congestion_level=congestion_level,
+
         accident_detected=False
     )
 
@@ -285,9 +317,15 @@ async def upload_image(
     # ==================================================
 
     alert_data = AlertRequest(
-        risk_score=risk_result["risk_score"],
-        risk_level=risk_result["risk_level"],
-        location=location["name"]
+
+        risk_score=
+            risk_result["risk_score"],
+
+        risk_level=
+            risk_result["risk_level"],
+
+        location=
+            location["name"]
     )
 
     alert_result = create_alert(
@@ -296,37 +334,59 @@ async def upload_image(
 
 
     # ==================================================
-    # 9. DATABASE RECORD
+    # 9. SAVE EVERYTHING TO DATABASE
     # ==================================================
 
     traffic_image = TrafficImage(
+
         filename=file.filename,
+
         file_path=file_path,
+
         status="analyzed",
 
+        # LOCATION
         location_id=location["id"],
+
         location_name=location["name"],
+
         latitude=location["latitude"],
+
         longitude=location["longitude"],
 
+        # VEHICLES
         car_count=car_count,
-        motorcycle_count=motorcycle_count,
+
+        motorcycle_count=
+            motorcycle_count,
+
         bus_count=bus_count,
+
         truck_count=truck_count,
-        bicycle_count=bicycle_count,
 
-        total_vehicles=total_vehicles,
+        bicycle_count=
+            bicycle_count,
 
-        congestion_level=congestion_level,
+        total_vehicles=
+            total_vehicles,
 
-        risk_score=risk_result["risk_score"],
-        risk_level=risk_result["risk_level"],
+        # TRAFFIC
+        congestion_level=
+            congestion_level,
 
-        alert_active=str(
-            alert_result["alert"]
-        ),
+        # RISK
+        risk_score=
+            risk_result["risk_score"],
 
-        alert_type=alert_result["alert_type"]
+        risk_level=
+            risk_result["risk_level"],
+
+        # ALERT
+        alert_active=
+            str(alert_result["alert"]),
+
+        alert_type=
+            alert_result["alert_type"]
     )
 
 
@@ -342,7 +402,7 @@ async def upload_image(
 
 
     # ==================================================
-    # 10. RESPONSE
+    # 10. FINAL RESPONSE
     # ==================================================
 
     return {
@@ -359,9 +419,23 @@ async def upload_image(
         "status":
             traffic_image.status,
 
-        "location":
-            location,
+        # LOCATION + COORDINATES
+        "location": {
 
+            "id":
+                location["id"],
+
+            "name":
+                location["name"],
+
+            "latitude":
+                location["latitude"],
+
+            "longitude":
+                location["longitude"]
+        },
+
+        # YOLO
         "yolo_result": {
 
             "counts":
@@ -375,13 +449,28 @@ async def upload_image(
                     "detections",
                     []
                 )
-
         },
 
-        "risk_result":
-            risk_result,
+        # RISK
+        "risk_result": {
 
+            "risk_score":
+                risk_result["risk_score"],
+
+            "risk_level":
+                risk_result["risk_level"],
+
+            "vehicle_count":
+                risk_result["vehicle_count"],
+
+            "congestion_level":
+                risk_result["congestion_level"],
+
+            "accident_detected":
+                risk_result["accident_detected"]
+        },
+
+        # ALERT
         "alert_result":
             alert_result
-
     }
