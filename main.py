@@ -6,6 +6,7 @@ from fastapi import (
     Form,
     HTTPException
 )
+
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 
@@ -72,17 +73,20 @@ Base.metadata.create_all(
 # ==================================================
 
 app = FastAPI(
-
     title="Traffic Intelligence API",
-
     version="1.0.0"
-
 )
+
+
+# ==================================================
+# CORS
+# ==================================================
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "http://localhost:5173",
-        "http://127.0.0.1:5173",
+        "http://localhost:5174",
+        "http://127.0.0.1:5174",
     ],
     allow_credentials=True,
     allow_methods=["*"],
@@ -131,10 +135,8 @@ os.makedirs(
 def home():
 
     return {
-
         "message":
             "Traffic Intelligence Backend is running!"
-
     }
 
 
@@ -164,11 +166,8 @@ async def upload_image(
     if location is None:
 
         raise HTTPException(
-
             status_code=404,
-
             detail="Location not found"
-
         )
 
 
@@ -177,28 +176,18 @@ async def upload_image(
     # ==================================================
 
     file_path = os.path.join(
-
         UPLOAD_FOLDER,
-
         file.filename
-
     )
 
-
     with open(
-
         file_path,
-
         "wb"
-
     ) as buffer:
 
         shutil.copyfileobj(
-
             file.file,
-
             buffer
-
         )
 
 
@@ -207,9 +196,7 @@ async def upload_image(
     # ==================================================
 
     yolo_result = detect_traffic(
-
         file_path
-
     )
 
 
@@ -218,13 +205,9 @@ async def upload_image(
     # ==================================================
 
     counts = yolo_result.get(
-
         "counts",
-
         {}
-
     )
-
 
     car_count = counts.get(
         "car",
@@ -257,17 +240,11 @@ async def upload_image(
     # ==================================================
 
     total_vehicles = (
-
         car_count
-
         + motorcycle_count
-
         + bus_count
-
         + truck_count
-
         + bicycle_count
-
     )
 
 
@@ -293,20 +270,13 @@ async def upload_image(
     # ==================================================
 
     traffic_data = TrafficData(
-
         vehicle_count=total_vehicles,
-
         congestion_level=congestion_level,
-
         accident_detected=False
-
     )
 
-
     risk_result = analyze_risk(
-
         traffic_data
-
     )
 
 
@@ -315,23 +285,13 @@ async def upload_image(
     # ==================================================
 
     alert_data = AlertRequest(
-
-        risk_score=
-            risk_result["risk_score"],
-
-        risk_level=
-            risk_result["risk_level"],
-
-        location=
-            location["name"]
-
+        risk_score=risk_result["risk_score"],
+        risk_level=risk_result["risk_level"],
+        location=location["name"]
     )
 
-
     alert_result = create_alert(
-
         alert_data
-
     )
 
 
@@ -340,56 +300,33 @@ async def upload_image(
     # ==================================================
 
     traffic_image = TrafficImage(
-
         filename=file.filename,
-
         file_path=file_path,
-
         status="analyzed",
 
-        # LOCATION
         location_id=location["id"],
-
         location_name=location["name"],
-
         latitude=location["latitude"],
-
         longitude=location["longitude"],
 
-        # VEHICLES
         car_count=car_count,
-
-        motorcycle_count=
-            motorcycle_count,
-
+        motorcycle_count=motorcycle_count,
         bus_count=bus_count,
-
         truck_count=truck_count,
+        bicycle_count=bicycle_count,
 
-        bicycle_count=
-            bicycle_count,
+        total_vehicles=total_vehicles,
 
-        total_vehicles=
-            total_vehicles,
+        congestion_level=congestion_level,
 
-        # TRAFFIC
-        congestion_level=
-            congestion_level,
+        risk_score=risk_result["risk_score"],
+        risk_level=risk_result["risk_level"],
 
-        # RISK
-        risk_score=
-            risk_result["risk_score"],
+        alert_active=str(
+            alert_result["alert"]
+        ),
 
-        risk_level=
-            risk_result["risk_level"],
-
-        # ALERT
-        alert_active=
-            str(alert_result["alert"]),
-
-        alert_type=
-            alert_result["alert_type"]
-
+        alert_type=alert_result["alert_type"]
     )
 
 
