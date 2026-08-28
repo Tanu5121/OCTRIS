@@ -4,6 +4,7 @@ import { locations } from "./components/map/locationsData";
 import { useEffect, useState } from "react";
 
 import type { PoliceUnit } from "./types/PoliceUnit";
+import type { RecommendedDeployment } from "./types/RecommendedDeployment";
 
 
 // ==================================================
@@ -61,28 +62,105 @@ function App() {
   // DEPLOYMENT RECOMMENDATION
   // ==================================================
 
-  const [recommendedDeployment, setRecommendedDeployment] =
-    useState<any>(null);
+  const [
+    recommendedDeployment,
+    setRecommendedDeployment,
+  ] = useState<RecommendedDeployment | undefined>(undefined);
+  
 
 
   // ==================================================
   // SELECTED LOCATION FOR IMAGE UPLOAD
   // ==================================================
 
-  const [selectedLocationId, setSelectedLocationId] =
-    useState<number>(1);
+  const [
+    selectedLocationId,
+    setSelectedLocationId,
+  ] = useState<number>(1);
+
+
+  // ==================================================
+  // FETCH DEPLOYMENT RECOMMENDATION
+  // ==================================================
+
+  const fetchRecommendation = async (
+    locationId: string
+  ) => {
+
+    try {
+
+      console.log(
+        "FETCHING RECOMMENDATION FOR:",
+        locationId
+      );
+
+      const response = await fetch(
+        `http://127.0.0.1:5002/api/deployment/recommend/${locationId}`
+      );
+
+      if (!response.ok) {
+        throw new Error(
+          "Failed to fetch deployment recommendation"
+        );
+      }
+
+      const data = await response.json();
+
+      console.log(
+        "DEPLOYMENT RECOMMENDATION:",
+        data
+      );
+
+      if (
+        data.success &&
+        data.recommendation
+      ) {
+
+        const recommendation =
+          data.recommendation;
+
+        setRecommendedDeployment({
+          recommended_unit_id:
+            recommendation.recommended_unit_id,
+
+          recommended_location_id:
+            recommendation.location_id,
+        });
+
+      } else {
+
+        setRecommendedDeployment(undefined);
+
+      }
+
+    } catch (error) {
+
+      console.error(
+        "RECOMMENDATION ERROR:",
+        error
+      );
+
+      setRecommendedDeployment(undefined);
+
+    }
+
+  };
 
 
   // ==================================================
   // LOCATION SELECTED ON MAP
   // ==================================================
 
-  const handleLocationSelect = (
+  const handleLocationSelect = async (
     locationId: string
   ) => {
 
     console.log(
       "Selected location:",
+      locationId
+    );
+
+    await fetchRecommendation(
       locationId
     );
 
@@ -104,7 +182,8 @@ function App() {
     try {
 
       const recommendedUnitId =
-        recommendation?.recommended_unit_id ?? null;
+        recommendation?.recommended_unit_id ??
+        null;
 
 
       const recommendedUnit =
@@ -152,6 +231,7 @@ function App() {
           riskLevel === "RED" ||
           riskLevel === "YELLOW" ||
           recommendedUnitId !== null,
+
       };
 
 
@@ -164,6 +244,7 @@ function App() {
       const response = await fetch(
         "http://127.0.0.1:8001/api/events/risk",
         {
+
           method: "POST",
 
           headers: {
@@ -173,6 +254,7 @@ function App() {
 
           body:
             JSON.stringify(event),
+
         }
       );
 
@@ -232,10 +314,12 @@ function App() {
       const formData =
         new FormData();
 
+
       formData.append(
         "file",
         file
       );
+
 
       formData.append(
         "location_id",
@@ -247,8 +331,11 @@ function App() {
         await fetch(
           "http://127.0.0.1:8000/upload-image",
           {
+
             method: "POST",
+
             body: formData,
+
           }
         );
 
@@ -362,6 +449,7 @@ function App() {
       console.log(
         "MAP RISK LOCATION UPDATED:",
         {
+
           mapLocationId,
 
           name:
@@ -372,6 +460,7 @@ function App() {
 
           riskLevel:
             newRiskLevel,
+
         }
       );
 
@@ -416,10 +505,6 @@ function App() {
             );
 
 
-            // ==================================================
-            // UPDATE MAP RECOMMENDED DEPLOYMENT
-            // ==================================================
-
             setRecommendedDeployment({
 
               recommended_unit_id:
@@ -429,6 +514,10 @@ function App() {
                 recommendation.location_id,
 
             });
+
+          } else {
+
+            setRecommendedDeployment(undefined);
 
           }
 
@@ -440,6 +529,8 @@ function App() {
           "Unable to get deployment recommendation:",
           error
         );
+
+        setRecommendedDeployment(undefined);
 
       }
 
@@ -559,19 +650,6 @@ function App() {
 
 
   // ==================================================
-  // SOCKET.IO
-  // VAIBHAVI DEPLOYMENT UPDATES
-  // ==================================================
-
-  useEffect(() => {
-
-    // Socket connection can be added here
-    // when deployment decision flow is connected.
-
-  }, []);
-
-
-  // ==================================================
   // UI
   // ==================================================
 
@@ -585,12 +663,14 @@ function App() {
       }}
     >
 
-      {/* ==================================================
+
+      {/* =============================================
           TRAFFIC IMAGE UPLOAD PANEL
-          ================================================== */}
+          ============================================= */}
 
       <div
         style={{
+
           position: "absolute",
 
           top: "90px",
@@ -607,14 +687,17 @@ function App() {
 
           boxShadow:
             "0 2px 8px rgba(0,0,0,0.25)",
+
         }}
       >
 
         <div
           style={{
+
             fontWeight: "bold",
 
             marginBottom: "8px",
+
           }}
         >
           Traffic Risk Analysis
@@ -625,7 +708,9 @@ function App() {
 
         <div
           style={{
+
             marginBottom: "8px",
+
           }}
         >
 
@@ -690,9 +775,9 @@ function App() {
       </div>
 
 
-      {/* ==================================================
+      {/* =============================================
           RISK MAP
-          ================================================== */}
+          ============================================= */}
 
       <RiskMap
 
